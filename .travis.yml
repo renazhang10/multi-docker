@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t renae/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run renae/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t renae/multi-client ./client
+  - docker build -t renae/multi-nginx ./nginx
+  - docker build -t renae/multi-server ./server
+  - docker build -t renae/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push renae/multi-client
+  - docker push renae/multi-nginx
+  - docker push renae/multi-server
+  - docker push renae/multi-worker
